@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 200" width="100%" height="100%">
+  <defs>
+    <linearGradient id="navy-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#1e293b" />
+    </linearGradient>
+    <linearGradient id="sky-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0ea5e9" />
+      <stop offset="100%" stop-color="#38bdf8" />
+    </linearGradient>
+  </defs>
+
+  <g transform="translate(10, 15)">
+    <!-- Left Wing (Navy Blue) -->
+    <g fill="url(#navy-grad)">
+      <!-- Main upper wing curve -->
+      <path d="M 110 90 C 80 50, 40 45, 10 50 C 40 65, 70 80, 110 90 Z" opacity="0.95" />
+      <!-- Middle feathers -->
+      <path d="M 110 92 C 75 62, 35 60, 15 70 C 42 80, 72 90, 110 92 Z" opacity="0.85" />
+      <path d="M 108 95 C 70 72, 30 75, 20 88 C 45 92, 72 96, 108 95 Z" opacity="0.75" />
+      <!-- Lower short feathers -->
+      <path d="M 104 98 C 65 85, 35 95, 30 105 C 50 104, 75 102, 104 98 Z" opacity="0.65" />
+      <path d="M 98 102 C 60 98, 45 110, 42 118 C 55 114, 75 108, 98 102 Z" opacity="0.55" />
+    </g>
+
+    <!-- Logo Typography (Berkaytur) -->
+    <g transform="translate(125, 100)">
+      <!-- "Berkay" in bold Navy -->
+      <text x="0" y="0" font-family="'Inter', 'Segoe UI', sans-serif" font-weight="900" font-size="62" fill="#0f172a" letter-spacing="-2">Berkay</text>
+      <!-- "tur" in light sky blue -->
+      <text x="212" y="0" font-family="'Inter', 'Segoe UI', sans-serif" font-weight="500" font-size="62" fill="#0ea5e9" letter-spacing="-2">tur</text>
+    </g>
+
+    <!-- Right Wing (Sky Blue) -->
+    <g fill="url(#sky-grad)" transform="translate(500, 10) scale(-1, 1) translate(-110, 0)">
+      <!-- Mirror of the upper wing with sky-blue gradient -->
+      <path d="M 110 90 C 80 50, 40 45, 10 50 C 40 65, 70 80, 110 90 Z" opacity="0.95" />
+      <path d="M 110 92 C 75 62, 35 60, 15 70 C 42 80, 72 90, 110 92 Z" opacity="0.85" />
+      <path d="M 108 95 C 70 72, 30 75, 20 88 C 45 92, 72 96, 108 95 Z" opacity="0.75" />
+      <path d="M 104 98 C 65 85, 35 95, 30 105 C 50 104, 75 102, 104 98 Z" opacity="0.65" />
+    </g>
+
+    <!-- Slogan: "her zaman nereye istersen" -->
+    <text x="320" y="152" font-family="'Inter', 'Segoe UI', sans-serif" font-weight="500" font-style="italic" font-size="20" fill="#1e293b" letter-spacing="1" text-anchor="middle">her zaman nereye istersen</text>
+  </g>
+</svg>

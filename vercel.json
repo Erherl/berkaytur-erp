@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "buildCommand": "prisma generate && vite build",
+  "installCommand": "npm install",
+  "framework": "vite",
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/index" },
+    { "source": "/health", "destination": "/api/index" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}

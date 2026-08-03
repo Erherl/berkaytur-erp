@@ -1,0 +1,43 @@
+services:
+  - type: web
+    name: berkaytur-okul-servis
+    env: node
+    region: frankfurt # Render Europe region closest to Turkey
+    plan: free
+    buildCommand: npm run render-build
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "10000"
+      - key: APP_URL
+        sync: false
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: ADMIN_USERNAME
+        value: admin
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GOOGLE_APPS_SCRIPT_URL
+        sync: false
+      - key: APPS_SCRIPT_SECRET
+        sync: false
+      - key: WHATSAPP_GATEWAY_URL
+        sync: false
+      - key: WHATSAPP_API_KEY
+        sync: false
+      - key: CLIENT_URL
+        sync: false

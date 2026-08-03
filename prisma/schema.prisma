@@ -1,0 +1,579 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           String        @id @default(uuid())
+  name         String
+  username     String        @unique
+  passwordHash String
+  role         String        // 'admin' | 'manager' | 'coordinator' | 'driver' | 'hostess'
+  email        String?
+  phone        String?
+  status       String        @default("active") // 'active' | 'inactive'
+  schoolId     String?
+  vehicleId    String?
+  assignedSchools  String?       @default("[]")
+  assignedAreas    String?       @default("[]")
+  assignedProjects String?       @default("[]")
+  tcNo             String?
+  photo            String?
+  notes            String?
+  mustChangePassword Boolean     @default(true)
+  assignedVehicles String?       @default("[]")
+  assignedDrivers  String?       @default("[]")
+  assignedHostesses String?      @default("[]")
+  
+  // Auditing & Soft Delete Standard Fields
+  createdBy    String?
+  updatedBy    String?
+  deletedBy    String?
+  isDeleted    Boolean       @default(false)
+  
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  sessions     UserSession[]
+  loginHistory LoginHistory[]
+
+  @@index([role])
+  @@index([isDeleted])
+  @@index([username])
+  @@index([isDeleted, role])
+}
+
+model UserSession {
+  id           String   @id @default(uuid())
+  userId       String
+  refreshToken String
+  deviceId     String?
+  deviceType   String?
+  ipAddress    String?
+  userAgent    String?
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([refreshToken])
+}
+
+model LoginHistory {
+  id         String   @id @default(uuid())
+  userId     String?
+  username   String
+  ipAddress  String?
+  userAgent  String?
+  deviceType String?
+  status     String   // 'success' | 'failed'
+  details    String?
+  timestamp  DateTime @default(now())
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([timestamp])
+}
+
+model TokenBlacklist {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  expiresAt DateTime
+
+  @@index([token])
+}
+
+model School {
+  id          String             @id @default(uuid())
+  name        String
+  address     String?
+  type        String             @default("kolej") // 'kolej' | 'devlet'
+  phone       String?
+  email       String?
+  kmRates     SchoolKmRate[]
+  regionRates SchoolRegionRate[]
+  
+  // Auditing & Soft Delete Standard Fields
+  createdBy   String?
+  updatedBy   String?
+  deletedBy   String?
+  isDeleted   Boolean            @default(false)
+  
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  @@index([isDeleted])
+  @@index([type])
+}
+
+model SchoolKmRate {
+  id         String   @id @default(uuid())
+  schoolId   String
+  minKm      Float
+  maxKm      Float
+  monthlyFee Float
+  annualFee  Float?
+  school     School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([schoolId])
+}
+
+model SchoolRegionRate {
+  id          String   @id @default(uuid())
+  schoolId    String
+  regionName  String
+  monthlyFee  Float
+  annualFee   Float?
+  description String?
+  school      School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([schoolId])
+}
+
+model Student {
+  id                 String   @id @default(uuid())
+  name               String
+  studentNumber      String?
+  classLevel         String?
+  schoolId           String?
+  schoolName         String?  // cached or manual
+  schoolType         String?  @default("kolej") // 'kolej' | 'devlet'
+  regionName         String?  // For Devlet schools (e.g. Yenidoğan, Çekmeköy)
+  distanceKm         Float?   // For Kolej schools
+  assignedFee        Float?   // Auto-populated monthly/tender fee based on region or KM
+  monthlyFee         Float?   // Calculated monthly payment
+  installmentCount   Int?     @default(12)
+  paymentPlan        String?  // Stored as JSON string array of installments
+  parentName         String?
+  parentPhone        String?
+  routeId            String?
+  routeName          String?
+  morningStatus      String   @default("pending") // 'pending' | 'on_board' | 'arrived' | 'absent'
+  eveningStatus      String   @default("pending")
+  registrationStatus String   @default("Aktif") // 'Potansiyel' | 'Sözleşme Bekliyor' | 'İmzalandı' | 'Aktif' | 'Pasif' | 'Ayrıldı' | 'Mezun'
+  latitude           Float?
+  longitude          Float?
+  
+  // Auditing & Soft Delete Standard Fields
+  createdBy          String?
+  updatedBy          String?
+  deletedBy          String?
+  isDeleted          Boolean  @default(false)
+  
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([schoolId])
+  @@index([routeId])
+  @@index([isDeleted])
+  @@index([morningStatus])
+  @@index([eveningStatus])
+  @@index([isDeleted, schoolId])
+  @@index([isDeleted, routeId])
+}
+
+model Parent {
+  id         String   @id @default(uuid())
+  name       String
+  phone      String   @unique
+  email      String?
+  studentIds String   // stored as JSON array string or comma separated
+  
+  // Auditing & Soft Delete Standard Fields
+  createdBy  String?
+  updatedBy  String?
+  deletedBy  String?
+  isDeleted  Boolean  @default(false)
+  
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([isDeleted])
+}
+
+model Driver {
+  id           String    @id @default(uuid())
+  name         String
+  phone        String
+  licenseClass String?
+  srcType      String?
+  psikoExpiry  String?
+  
+  // Auditing & Soft Delete Standard Fields
+  createdBy    String?
+  updatedBy    String?
+  deletedBy    String?
+  isDeleted    Boolean   @default(false)
+  
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([isDeleted])
+}
+
+model Hostess {
+  id        String   @id @default(uuid())
+  name      String
+  phone     String
+  certNo    String?
+  status    String   @default("certified")
+  
+  // Auditing & Soft Delete Standard Fields
+  createdBy String?
+  updatedBy String?
+  deletedBy String?
+  isDeleted Boolean  @default(false)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isDeleted])
+}
+
+model Vehicle {
+  id                    String   @id @default(uuid())
+  plate                 String   @unique
+  brand                 String?
+  model                 String?
+  year                  String?
+  capacity              Int      @default(16)
+  driverId              String?
+  driverName            String?
+  hostessId             String?
+  hostessName           String?
+  status                String   @default("active") // 'active' | 'idle' | 'maintenance'
+  schoolId              String?
+  schoolName            String?
+  projectName           String?
+  vehicleType           String?  // 'company' | 'supplier'
+  fuelType              String?
+  phone                 String?
+  gpsEnabled            Boolean  @default(false)
+  acEnabled             Boolean  @default(false)
+  cameraSystemEnabled   Boolean  @default(false)
+  registrationNumber    String?
+  inspectionDate        String?
+  insuranceDate         String?
+  compInsuranceDate     String?
+  tyreReplaceDate       String?
+  maintenanceDate       String?
+  fireExtinguisherDate  String?
+  firstAidKit           Boolean  @default(false)
+  seating               String   @default("{}") // JSON string
+  photo                 String?
+  supplierCompany       String?
+  supplierManager       String?
+  
+  // Auditing & Soft Delete Standard Fields
+  createdBy             String?
+  updatedBy             String?
+  deletedBy             String?
+  isDeleted             Boolean  @default(false)
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@index([isDeleted])
+  @@index([isDeleted, status])
+}
+
+model VehicleHistory {
+  id        String   @id @default(uuid())
+  vehicleId String
+  date      String
+  type      String   // 'school' | 'repair' | 'driver'
+  title     String
+  details   String?
+  cost      Float?
+  createdAt DateTime @default(now())
+
+  @@index([vehicleId])
+}
+
+model Route {
+  id        String   @id @default(uuid())
+  name      String
+  schoolId  String?
+  driverId  String?
+  hostessId String?
+  vehicleId String?
+  status    String   @default("inactive") // 'inactive' | 'morning_active' | 'evening_active'
+  stops     String   @default("[]") // JSON string of stops
+  
+  // Auditing & Soft Delete Standard Fields
+  createdBy String?
+  updatedBy String?
+  deletedBy String?
+  isDeleted Boolean  @default(false)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isDeleted])
+}
+
+model Stop {
+  id            String   @id @default(uuid())
+  routeId       String
+  name          String
+  estimatedTime String?
+  status        String   @default("pending") // 'pending' | 'completed' | 'delayed'
+  createdAt     DateTime @default(now())
+
+  @@index([routeId])
+}
+
+model Attendance {
+  id        String   @id @default(uuid())
+  studentId String
+  date      String
+  shift     String   // 'morning' | 'evening'
+  status    String   // 'present' | 'absent' | 'excused'
+  timestamp String
+  
+  // Auditing & Soft Delete Standard Fields
+  createdBy String?
+  updatedBy String?
+  deletedBy String?
+  isDeleted Boolean  @default(false)
+
+  @@index([studentId])
+  @@index([date])
+  @@index([isDeleted])
+  @@index([studentId, date, shift]) // High-performance composite index for attendance checks
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  title     String
+  content   String
+  target    String   @default("all") // 'all' | 'parents' | 'drivers'
+  timestamp String
+}
+
+model Message {
+  id             String   @id @default(uuid())
+  recipientPhone String
+  recipientName  String
+  message        String
+  templateName   String?
+  status         String   @default("sent") // 'sent' | 'delivered' | 'read'
+  timestamp      String
+
+  @@index([recipientPhone])
+  @@index([status])
+}
+
+model Log {
+  id        String   @id @default(uuid())
+  userId    String
+  userName  String
+  userRole  String
+  action    String
+  details   String?
+  timestamp String
+
+  @@index([userId])
+  @@index([timestamp])
+}
+
+model Setting {
+  key   String @id
+  value String
+}
+
+model Backup {
+  id                    String   @id @default(uuid())
+  filename              String
+  timestamp             String
+  sizeBytes             Int?
+  createdBy             String?
+}
+
+model AppStorageEntry {
+  id         String   @id @default(uuid())
+  namespace  String   @default("bkt_")
+  key        String   @unique
+  value      String
+  category   String?  @default("client-cache")
+  createdBy  String?
+  updatedBy  String?
+  isDeleted  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([namespace, isDeleted])
+}
+
+model Document {
+  id          String   @id @default(uuid())
+  name        String
+  category    String
+  fileSize    String?
+  uploadDate  String
+  uploadedBy  String?
+  fileUrl     String
+  mimeType    String?  @default("application/pdf")
+  schoolId    String?
+  vehicleId   String?
+  studentId   String?
+  ownerUserId String?
+  
+  // Auditing & Soft Delete Standard Fields
+  createdBy   String?
+  updatedBy   String?
+  deletedBy   String?
+  isDeleted   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+
+  @@index([isDeleted])
+  @@index([isDeleted, category])
+  @@index([schoolId])
+  @@index([vehicleId])
+  @@index([studentId])
+  @@index([ownerUserId])
+  @@index([isDeleted, schoolId])
+  @@index([isDeleted, vehicleId])
+  @@index([isDeleted, studentId])
+  @@index([isDeleted, ownerUserId])
+}
+
+model Payment {
+  id          String   @id @default(uuid())
+  studentId   String
+  studentName String
+  parentName  String?
+  amount      Float
+  dueDate     String
+  paymentDate String?
+  status      String   @default("pending") // 'paid' | 'pending' | 'overdue'
+  category    String   @default("Tahsilat")
+  description String?
+  
+  // Auditing & Soft Delete Standard Fields
+  createdBy   String?
+  updatedBy   String?
+  deletedBy   String?
+  isDeleted   Boolean  @default(false)
+
+  @@index([studentId])
+  @@index([isDeleted])
+  @@index([status])
+  @@index([dueDate])
+  @@index([studentId, status]) // High-performance composite index for payment lookups
+}
+
+model Application {
+  id               String   @id @default(uuid())
+  studentName      String
+  tcNo             String?
+  birthDate        String?
+  gender           String?
+  schoolId         String?
+  classLevel       String?
+  section          String?
+  motherName       String?
+  fatherName       String?
+  phone            String?
+  email            String?
+  address          String?
+  morningAddress   String?
+  eveningAddress   String?
+  siblingInfo      String?
+  allergy          String?
+  medication       String?
+  emergencyContact String?
+  emergencyPhone   String?
+  kvkkConsent      Boolean  @default(false)
+  rulesConsent     Boolean  @default(false)
+  contractConsent  Boolean  @default(false)
+  status           String   @default("pending") // 'pending' | 'approved' | 'rejected'
+  km               Float?
+  calculatedFee    Float?
+  appliedAt        String
+  
+  // Auditing & Soft Delete Standard Fields
+  createdBy        String?
+  updatedBy        String?
+  deletedBy        String?
+  isDeleted        Boolean  @default(false)
+
+  @@index([isDeleted])
+  @@index([status])
+}
+
+model Contract {
+  id               String   @id @default(uuid())
+  studentId        String?
+  studentName      String
+  parentName       String?
+  parentPhone      String?
+  schoolName       String?
+  driverName       String?
+  driverPhone      String?
+  hostessName      String?
+  hostessPhone     String?
+  vehiclePlate     String?
+  vehicleModel     String?
+  km               Float?
+  annualFee        Float?
+  paymentType      String?  // 'cash' | 'installments'
+  installmentCount Int?     @default(0)
+  startDate        String?
+  endDate          String?
+  term             String?
+  version          Int      @default(1)
+  status           String   @default("draft") // 'draft' | 'active' | 'expired' | 'terminated'
+  signedAt         String?
+  signerName       String?
+  signaturePreview String?
+  createdAt        String
+  
+  // Auditing & Soft Delete Standard Fields
+  createdBy        String?
+  updatedBy        String?
+  deletedBy        String?
+  isDeleted        Boolean  @default(false)
+
+  @@index([isDeleted])
+  @@index([studentId])
+  @@index([status])
+  @@index([isDeleted, status]) // High-performance composite index for contract filters
+}
+
+model ContractHistory {
+  id         String   @id @default(uuid())
+  contractId String
+  version    Int
+  createdAt  String
+  details    String?
+
+  @@index([contractId])
+}
+
+model AssignmentAuditLog {
+  id          String   @id @default(uuid())
+  actorId     String   
+  actorName   String
+  targetId    String   
+  targetName  String
+  fieldName   String   
+  oldValue    String?  
+  newValue    String?  
+  ipAddress   String?  
+  userAgent   String?  
+  timestamp   DateTime @default(now()) 
+
+  @@index([targetId])
+  @@index([timestamp])
+}
+

@@ -1,0 +1,6 @@
+{
+  "name": "Berkaytur Okul Servisi",
+  "description": "Berkaytur Okul Servisi Yönetim Sistemi - Admin, Proje Müdürü, Okul Sorumlusu, Veli, Şoför ve Hostes panellerini içeren kapsamlı yönetim platformu.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
